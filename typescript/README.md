@@ -206,3 +206,45 @@ tsc --init
 ```
 
 then when we run `tsc` it will compile all .ts files in directory. same for `tsc -w`, which will watch all .ts files for changes and compile.
+
+### tsconfig
+
+Configuration file for the tsc compiler.
+
+exclude/include files:
+
+```
+  },
+  "exclude": [
+    "filename.ts",  // specific file
+    "*.dev.ts",  // any file matching pattern
+    "**/*.dev.ts",  // any file matching pattern in any folder
+    "node_modules",  // excluded as default setting, so not necessary
+  ],
+  // include will skip all files not in this list (and remove exclude from this list)
+  "include": [
+    "app.ts"
+  ]
+}
+```
+
+important options:
+
+- target: what javascript version to compile to
+  - es5, es6 (es2015), es2016
+  - in vscode ctl-space will show all options
+- lib: libraries to include
+  - when commented out, default libs are included
+  - reasonable values (defaults for es6 target)
+    - "dom"
+    - "es6"
+    - "dom.iterable"
+    - "scripthost"
+- allowJs: will compile .js files as well (leave commented out)
+- checkJs: will check .js files for errors (leave commented out)
+- declaration: creates type files for sharing modules
+- sourceMap: useful for debugging
+- outDir: directory to output compiled js to ("./dist")
+- rootDir: directory where ts files can be found ("./src")
+- removeComments: remove comments from ts files when compiling (optimization)
+- noEmitOnError: do not create any .js files on error (if true), default false
