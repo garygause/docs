@@ -181,7 +181,192 @@ addAndHandle(1, 2, (result: number) => {
   console.log(result);
   return result;
 });
+```
 
+## Classes and Interfaces
+
+```
+class User {
+  private id: string;
+  name: string;
+  public age: number;  // public is default, not needed
+  private passwords: string[] = [];
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  describe() {
+    return 'User: ' + this.name;
+  }
+
+  // this is valid in typescript as well to be more strict
+  describe2(this: User) {
+    return 'User: ' + this.name;
+  }
+
+  addPassword(password: string) {
+    this.passwords.push(password);
+  }
+
+  getPasswords() {
+    return this.passwords;
+  }
+
+}
+
+const user1 = new User('Gary');
+console.log(user1.describe());
+```
+
+shortcut initialization (dont need to define fields):
+
+```
+class User {
+  private passwords: string[];
+
+  // id is set to readonly and private
+  constructor(private readonly id: string, public name: string) {
+    this.passwords = [];
+  }
+
+  describe() {
+    return `User ${this.id}: ${this.name}`;
+  }
+}
+```
+
+### inheritance:
+
+```
+class AdminUser extends User {
+  private permissions: string[];
+
+  constructor(id: string, name: string, permissions: string[]) {
+    super(id, name);
+    this.permissions = permissions;
+  }
+}
+```
+
+### protected:
+
+```
+class User {
+  protected passwords: string[];
+
+  // id is set to readonly and private
+  constructor(private readonly id: string, public name: string) {
+    this.passwords = [];
+  }
+
+  describe() {
+    return `User ${this.id}: ${this.name}`;
+  }
+}
+
+class AdminUser extends User {
+  private permissions: string[];
+
+  constructor(id: string, name: string, permissions: string[]) {
+    super(id, name);
+    this.permissions = permissions;
+    this.passwords = ['1234'];  // accessible because of protected keyword on parent
+    this.id = '123';  // not accessible due to private keyword on parent
+  }
+}
+```
+
+### getters and setters:
+
+```
+class AdminUser extends User {
+  private permissions: string[];
+
+  constructor(id: string, name: string, permissions: string[]) {
+    super(id, name);
+    this.permissions = permissions;
+  }
+
+  get userPermissions() {
+    return this.permissions;
+  }
+
+  set userPermissions(permissions: string[]) {
+    this.permissions = permissions;
+  }
+
+}
+
+const admin = new AdminUser('123', 'Gary', ['read', 'write']);
+console.log(admin.userPermissions);
+admin.userPermissions = ['read'];
+```
+
+### static methods and properties:
+
+```
+class User {
+  protected passwords: string[];
+  static version = '1.0';
+
+  // id is set to readonly and private
+  constructor(private readonly id: string, public name: string) {
+    this.passwords = [];
+  }
+
+  describe() {
+    return `User ${this.id}: ${this.name}`;
+  }
+
+  static sayHello() {
+    return 'Hello!';
+  }
+
+}
+
+console.log(User.sayHello());
+console.log(User.version);
+```
+
+### interfaces
+
+```
+abstract class UserInterface {
+  abstract id: string;
+  abstract describe(): string;
+}
+
+// why not implements?
+class User extends UserInterface {
+  ...
+}
+```
+
+### singletons
+
+Always only have one instance of a class, e.g. one db connection.
+
+```
+Class DB {
+  db: string;
+  private static instance: DB;
+
+  private constructor() {
+    this.db = 'example';
+  }
+
+  static getInstance() {
+    if (DB.instance) {
+      return this.instance;
+    } else {
+      this.instance = new DB();
+      return this.instance;
+    }
+  }
+}
+
+const db = DB.getInstance();
 
 ```
 
