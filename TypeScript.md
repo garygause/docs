@@ -1,5 +1,34 @@
 # Typescript
 
+- [Typescript](#typescript)
+  - [Types](#types)
+  - [Type Annotations](#type-annotations)
+    - [Variables:](#variables)
+    - [Tuples and Enums](#tuples-and-enums)
+    - [Objects:](#objects)
+    - [Literal Types and Type Aliases](#literal-types-and-type-aliases)
+    - [Functions](#functions)
+  - [Classes and Interfaces](#classes-and-interfaces)
+    - [Inheritance:](#inheritance)
+    - [Protected:](#protected)
+    - [Getters and Setters:](#getters-and-setters)
+    - [Static Methods and Properties:](#static-methods-and-properties)
+    - [Abstract Classes and Interfaces](#abstract-classes-and-interfaces)
+    - [Singletons](#singletons)
+  - [Advanced Types](#advanced-types)
+    - [Intersection Types](#intersection-types)
+    - [Type Guards](#type-guards)
+    - [Discriminated Unions](#discriminated-unions)
+    - [Type Casting](#type-casting)
+    - [Index Properties](#index-properties)
+    - [Function Overloads](#function-overloads)
+    - [Optional Chaining](#optional-chaining)
+    - [Nullish Coalescing](#nullish-coalescing)
+  - [Generics](#generics)
+  - [Decorators](#decorators)
+  - [TSC Compiler](#tsc-compiler)
+    - [tsconfig](#tsconfig)
+
 ## Types
 
 - number
@@ -24,7 +53,7 @@ is preferred to:
 
 `let myString: string = 'abc';`
 
-### variables:
+### Variables:
 
 ```
 let myString: string = 'abc';
@@ -35,7 +64,7 @@ let myRandomArray: (string | number)[] = ['a', 2];
 let noIdeaWhat = unknown;  // better than "any", will throw error if assigned where type req
 ```
 
-### tuples and enums
+### Tuples and Enums
 
 Purely typescript concept (at least in javascript land).
 
@@ -72,7 +101,7 @@ enum Role { ADMIN = 5, READ_ONLY, AUTHOR };
 enum Role { ADMIN = 5, READ_ONLY = 100, AUTHOR = 'AUTHOR' };
 ```
 
-### objects:
+### Objects:
 
 ```
 const person = {
@@ -81,7 +110,7 @@ const person = {
 }
 ```
 
-### literal types and type aliases
+### Literal Types and Type Aliases
 
 ```
 // literal types
@@ -112,7 +141,7 @@ function greetUser(user: User) {
 }
 ```
 
-### functions
+### Functions
 
 params:
 
@@ -236,7 +265,22 @@ class User {
 }
 ```
 
-### inheritance:
+optional properties:
+
+```
+class User {
+  id: string;
+  name?: string;
+
+  constructor(n?: string) {
+    if (n) {
+      this.name = n;
+    }
+  }
+}
+```
+
+### Inheritance:
 
 ```
 class AdminUser extends User {
@@ -249,7 +293,7 @@ class AdminUser extends User {
 }
 ```
 
-### protected:
+### Protected:
 
 ```
 class User {
@@ -277,7 +321,7 @@ class AdminUser extends User {
 }
 ```
 
-### getters and setters:
+### Getters and Setters:
 
 ```
 class AdminUser extends User {
@@ -303,7 +347,7 @@ console.log(admin.userPermissions);
 admin.userPermissions = ['read'];
 ```
 
-### static methods and properties:
+### Static Methods and Properties:
 
 ```
 class User {
@@ -329,21 +373,73 @@ console.log(User.sayHello());
 console.log(User.version);
 ```
 
-### interfaces
+### Abstract Classes and Interfaces
+
+abstract classes can have implemented methods, unlike interfaces.
 
 ```
-abstract class UserInterface {
+abstract class User {
   abstract id: string;
   abstract describe(): string;
-}
 
-// why not implements?
-class User extends UserInterface {
-  ...
+  say(phrase: string) {
+    console.log(phrase);
+  }
 }
 ```
 
-### singletons
+interfaces:
+
+```
+interface PersonInterface {
+  readonly id: string;
+  name: string;
+  age: number;
+  describe(): string;
+  say(phrase: string): void;
+}
+
+// object implementation
+let person1: PersonInterface;
+person1 = {
+  name: 'Gary',
+  age: 30,
+  describe() {
+    return `Person: ${this.name}``;
+  },
+  say(phrase: string) {
+    console.log(phrase);
+  }
+}
+
+// implements keyword
+class Person implements PersonInterface {}
+
+// can extend multiple interfaces
+interface MultiInterface extends PersonInterface, Greetable {}
+
+// interface as a function type
+interface Adder {
+  (a: number, b: number): number;
+}
+let add: Adder;
+
+add = (n1: number, n2: number) => {
+  return n1 + n2;
+}
+
+// optional properties
+interface Named {
+  readonly name: string;
+  nickname?: string;  // optional property
+}
+
+
+```
+
+interfaces can have readonly modifier, but not private or others.
+
+### Singletons
 
 Always only have one instance of a class, e.g. one db connection.
 
@@ -370,7 +466,213 @@ const db = DB.getInstance();
 
 ```
 
-## TSC Compilar
+## Advanced Types
+
+### Intersection Types
+
+Intersection types allow us to combine other types.
+
+```
+type Admin = {
+  name: string;
+  permissions: string[];
+}
+
+type User {
+  name: string;
+  startDate: Date;
+}
+
+type AdminUser = Admin & User;
+
+const user1: AdminUser = {
+  name: 'Gary',
+  permissions: ['Read', 'Write'],
+  startDate: new Date()
+}
+
+type Combinable = string | number;
+type Numeric = number | boolean;
+type Universal = Combinable & Numeric;  // number
+```
+
+Intersection of object types is all types, the union. Intersection of types, is what they have in common.
+
+### Type Guards
+
+Type guards help with union types.
+
+```
+type Combinable = string | number;
+function add(a: Combinable, b: Combinable) {
+  // the typeof expression is a type guard
+  if (typeof a === 'string' || typeof b === string) {
+    return a.toString() + b.toString();
+  }
+  return a + b;
+}
+
+type UnknownUser = Admin | User;
+function checkPermissions(user: UnknownUser) {
+  // type guard
+  if ('permissions' in user) {
+    console.log(user.permissions);
+  }
+}
+
+// class type guard
+class Car {
+  driver() {
+    console.log('driving');
+  }
+}
+
+class Truck {
+  drive() {
+    console.log('driving');
+  }
+  loadCargo(amount: number) {
+    console.log(amount);
+  }
+}
+
+type Vehicle = Car | Truck;
+
+const v1 = new Car();
+const v2 = new Truck();
+
+function useVehicle(vehicle: Vehicle) {
+  vehicle.drive();
+  // this works
+  if ('loadCargo' in vehicle) {
+    vehicle.loadCargo(100);
+  }
+  // better method for classes
+  if (vehicle instanceof Truck) {
+    vehicle.loadCargo(100);
+  }
+}
+```
+
+### Discriminated Unions
+
+Pattern for working with union types. Makes implementing type guards easier. A discriminated union sets a property (type below) in each interface or type that allows us to discriminate which one we are using. A "safer" pattern for working with union types.
+
+```
+interface Bird {
+  type: 'bird';
+  flyingSpeed: number;
+}
+
+interface Horse {
+  type: 'horse';
+  groundSpeed: number;
+}
+
+type Animal = Bird | Horse;
+
+function moveAnimal(animal: Animal) {
+  let speed: number;
+  switch (animal.type) {
+    case 'bird':
+      speed = animal.flyingSpeed;
+      break;
+    case 'horse':
+      speed = animal.groundSpeed;
+  console.log(speed);
+  }
+}
+```
+
+### Type Casting
+
+Type casting helps us tell typescript that something is of a particular type. Very useful when working with the dom.
+
+```
+//alternate syntax
+const paragraph = <HTMLParagraphElement></HTMLParagraphElement>document.queryElementById('main-paragraph')!;  // ! at end means ignore null check, ts does not know what html exists
+
+const userInput = document.getElementById('user-input')! as HTMLInputElement;
+
+// if we don't know if it will be null or not:
+const userInput = document.getElementById('user-input');
+if (userInput) {
+  (userInput as HTMLInputElement).value = 'Enter something';
+}
+```
+
+### Index Properties
+
+Useful if we don't know what properties we will have or want to know.
+
+```
+interface ErrorContainer {
+  // this means any property added to this must be a string and its value must be a string
+  [prop: string]: string;  // 'email', 'username', etc
+}
+
+const errorBag: ErrorContainer = {
+  email: 'not a valid email',
+  username: 'must start with a character'
+}
+```
+
+### Function Overloads
+
+Similar in concept to other languages, but is used for return types to help typescript.
+
+```
+type Combinable = string | number;
+
+// tells typescript the return type when multiple are possible
+// must be right above main function
+
+function add(a: number, b: number): number;
+function add(a: string, b: string): string;
+function add(a: string, b: number): string;
+function add(a: number, b: string): string;
+function add(a: Combinable, b: Combinable) {
+  // the typeof expression is a type guard
+  if (typeof a === 'string' || typeof b === string) {
+    return a.toString() + b.toString();
+  }
+  return a + b;
+}
+```
+
+### Optional Chaining
+
+Useful when we don't know if a property is defined, e.g. when retrieving data from a database.
+
+```
+const fetchedData = {
+  id: '123',
+  name: 'Gary',
+  job: { title: 'CTO', description: 'Big Boss' }
+}
+
+// let's say that data comes from the db or from a none typescript source
+// manual method
+console.log(fetchedData.job && fetchedData.job.title);
+
+// typescript method
+console.log(fetchedData?.job?.title);  // chaining
+```
+
+### Nullish Coalescing
+
+Useful if we have data that we aren't sure if it is null-ish.
+
+```
+const data = userInput || 'Default';  // fails on ''
+const data = userInput ?? 'Default';  // null-ish coalescing, checks for null or undefined
+```
+
+## Generics
+
+## Decorators
+
+## TSC Compiler
 
 basic usage:
 
