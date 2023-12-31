@@ -25,6 +25,11 @@
     - [Optional Chaining](#optional-chaining)
     - [Nullish Coalescing](#nullish-coalescing)
   - [Generics](#generics)
+    - [Generic constraints:](#generic-constraints)
+    - [keyof](#keyof)
+  - [Generic Classes](#generic-classes)
+    - [Generic Utility Types](#generic-utility-types)
+    - [Generic Types vs Union Types](#generic-types-vs-union-types)
   - [Decorators](#decorators)
   - [TSC Compiler](#tsc-compiler)
     - [tsconfig](#tsconfig)
@@ -670,7 +675,182 @@ const data = userInput ?? 'Default';  // null-ish coalescing, checks for null or
 
 ## Generics
 
+Typescript feature. Gives types to generics for increased type safety. i.e. Array is a builtin generic, Array<string> is a generic type.
+
+```
+// Array is a generic type, we give it more info on the type with <>
+const names: Array<string> = [];
+
+// Promise is a generic type, here we tell ts that it will return a string
+const promise: Promise<string> = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('all done');
+  }, 2000);
+});
+
+// without a more specific type we won't know what type data is here
+// generic types increases type safety
+promise.then(data => {
+  console.log(data);
+})
+```
+
+We can create our own generics:
+
+```
+// this is valid, if redundant
+function merge(objA: object, objB: object) {
+  Object.assign(objA, objB);
+}
+const mergedObj = merge({name: 'Gary'}, {age: 30});
+// {name: 'Gary', age: 30}
+
+// can't do this in ts
+console.log(mergedObj.name);
+
+// generics solves this, T and U are generic types
+function merge<T, U>(objA: T, objB: U) {
+  return Object.assign(objA, objB);
+}
+const mergedObj = merge({name: 'Gary'}, {age: 30});
+// ts now knows this is an intersection of the two generic types
+
+//this now works
+console.log(mergedObj.name);
+
+// we could create concrete types on function call, but generics does this for us
+const mergedObj = merge<{name: string}, {age: number}>({name: 'Gary'}, {age: 30});
+```
+
+### Generic constraints:
+
+```
+// let's say we did this
+function merge<T, U>(objA: T, objB: U) {
+  return Object.assign(objA, objB);
+}
+const mergedObj = merge({name: 'Gary'}, 30);
+// mergedObj has only {name: 'Gary'} because 30 is not an object
+
+// we can use generic constraints to limit the type of input to the function
+function merge<T extends object, U extends object>(objA: T, objB: U) {
+  return Object.assign(objA, objB);
+}
+// now we get an error with this malformed function call
+const mergedObj = merge({name: 'Gary'}, 30);
+
+// other examples
+function merge<T extends string, U extends string | number>(a: T, b: U) {}
+function merge<T extends User, U>(person: T, misc: U) {}
+
+```
+
+### keyof
+
+Ensures that if we try to access a property, it will exist on object.
+
+```
+function extractAndConvert<T extends object, U extends keyof T>(obj: T, key: U) {
+  return obj[key];
+}
+```
+
+## Generic Classes
+
+Allows us to create a generically typed class.
+
+```
+class DataStorage<T> {
+  private data: T[] = [];
+
+  addItem(item: T) {
+    this.data.push(item);
+  }
+
+  removeItem(item: T) {
+    this.data.splice(this.data.indexOf(item), 1);
+  }
+
+  getItems() {
+    return [...this.data];
+  }
+
+}
+
+const textStorage = new DataStorage<string>();
+textStorage.addItem('Gary');
+
+const numberStorage = new DataStorage<number>();
+numberStorage.addItem(1);
+
+// with non-primitive values it doesn't work so well because of splice
+const objStorage = new DataStorage<object>();
+objStorage.addItem({ name: 'Gary' });
+objStorage.addItem({ name: 'Maya' });
+
+// this always causes splice to return -1 as index
+objStorage.removeItem({ name: 'Gary });
+
+// we can use "exact objects".  this works
+const garyObj = { name: 'Gary'};
+objStorage.addItem(garyObj);
+objStorage.removeItem(garyObj);
+
+// a better pattern would be to limit the types accepted by the class
+class DataStorage<T extends string | number> {}
+
+// objects would work better with a specialized class (e.g. one that goes by ids)
+```
+
+### Generic Utility Types
+
+Builtin generic types. Just a few examples.
+
+```
+// Partial, makes all properties optional
+interface MyGoal {
+  title: string;
+  description: string;
+  completed: Date;
+}
+
+function createGoal(title: string, description: string, date: Date): MyGoal {
+  // Partial makes all properties optional so we can use it without immediate data
+  let myGoal: Partial<MyGoal> = {};
+  myGoal.title = title;
+  myGoal.description = description;
+  myGoal.completed = date;
+
+  // need to cast it to MyGoal because of the Partial type (only when a complete type)
+  return myGoal as MyGoal;
+}
+
+//Readonly, locks values
+const names: Readonly<string[]> = ['Gary', 'Maya'];
+names.push('Max');  // gives error
+```
+
+### Generic Types vs Union Types
+
+Although similar, union and generic types have different uses. Here the union type is logically consistent with generic, but it creates a situation where a type is used in one place (data array), then a different type can be used in another (function). Generic types requires us to pick a type to start with and use throughout.
+
+```
+// union
+private data: (string | number)[] = [];
+addItem(item: (string | number)) {}
+
+// generic
+private data: T[] = [];
+addItem(item: T) {}
+```
+
 ## Decorators
+
+Useful when writing code used by other developers (meta programming).
+
+```
+
+```
 
 ## TSC Compiler
 
