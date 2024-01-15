@@ -846,10 +846,110 @@ addItem(item: T) {}
 
 ## Decorators
 
-Useful when writing code used by other developers (meta programming).
+Useful when writing code used by other developers (meta programming). A decorator is a function. Can decorate classes, functions/methods, properties, and parameters. Decorators execute on definition of logic decoratored, not at runtime.
 
 ```
+// decorator, convention uses uppercase
+function Logger(constructor: Function) {
+  console.log('logging');
+}
 
+@Logger
+class Person {
+  name: string = 'Gary';
+
+  constructor() {
+    console.log(this.name);
+  }
+}
+```
+
+decorator factory:
+
+```
+// function that returns a new function (factory)
+function Logger(logString: string) {
+  return function(constructor: Function) {
+    console.log(logString);
+    console.log(constructor);
+  };
+}
+
+// have to execute decorator as a function now
+// can now pass in params
+@Logger('logging person')
+class Person {
+  name: string = 'Gary';
+
+  constructor() {
+    console.log(this.name);
+  }
+}
+```
+
+useful examples:
+
+```
+function WithTemplate(template: string, hookId: string) {
+  // '_' here tells ts that we know we are getting a param but we aren't going to use it
+  return function(_: Function) {
+    const hookElement = document.getElementById(hookId);
+    if (hookElement) {
+      hookElement.innerHTML = template;
+    }
+  };
+}
+
+// say 'app' is an id in html dom
+@WithTemplate('<h1>My Person Object</h1>', 'app')
+class Person {
+  name: string = 'Gary';
+
+  constructor() {
+    console.log(this.name);
+  }
+}
+
+// can even access object properties
+
+function WithTemplate(template: string, hookId: string) {
+  // now we have to use 'any' type
+  return function(constructor: any) {
+    const hookElement = document.getElementById(hookId);
+    // access constructor of object
+    const p = new constructor();
+
+    if (hookElement) {
+      hookElement.innerHTML = template;
+      // set element content to name (have to use '!' to tell ts will not be null)
+      hookElement.querySelector('h1')!.textContent = p.name;
+    }
+  };
+}
+
+// say 'app' is an id in html dom
+@WithTemplate('<h1>My Person Object</h1>', 'app')
+class Person {
+  name: string = 'Gary';
+
+  constructor() {
+    console.log(this.name);
+  }
+}
+```
+
+can use multiple decorators, executes from bottom decorator to top:
+
+```
+@Logger('logging person')
+@WithTemplate('<h1>My Person Object</h1>', 'app')
+class Person {
+  name: string = 'Gary';
+
+  constructor() {
+    console.log(this.name);
+  }
+}
 ```
 
 ## TSC Compiler
