@@ -61,3 +61,7 @@ In v0.3, the output parser concept was integrated into the langchain_core librar
 ```python
 from langchain_core.output_parsers import JsonOutputParser
 ```
+
+## Agents
+
+Reference: [LangChain Agents](https://python.langchain.com/docs/tutorials/agents/)
