@@ -47,6 +47,42 @@ Models are stored at `~/.ollama/models` on Mac and `/usr/share/ollama/.ollama/mo
 
 Once a model is available locally, you can use it with LangChain.
 
+### Changing the default model directory
+
+Various methods for changing the default model directory are listed online with limited success. This is the only method that has worked for me.
+
+Bind the model directory to a new location.
+
+```bash
+sudo mount --bind /media/dev/ml/ollama/models /usr/share/ollama/.ollama/models
+```
+
+And update fstab:
+
+```bash
+# /etc/fstab
+
+# ollama models
+/media/dev/ml/ollama/models     /usr/share/ollama/.ollama/models     none     defaults,bind     0 0
+```
+
+Then restart the ollama service:
+
+```bash
+sudo systemctl restart ollama
+sudo systemctl status ollama
+```
+
+Test the connectivity:
+
+```bash
+curl http://localhost:11434/api/version
+
+# and
+
+ollama list
+```
+
 ### LangChain integration:
 
 First run or pull the model with Ollama. Then install the LangChain integration:
